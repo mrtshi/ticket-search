@@ -6,6 +6,7 @@ import {
   BarChart3,
   CalendarDays,
   Clock,
+  HelpCircle,
   Loader2,
   RotateCcw,
   Trash2,
@@ -311,6 +312,37 @@ export function StatsDashboard({ onBackToSearch: _onBackToSearch }: { onBackToSe
           <WaitingPartsList tickets={waitingParts} />
         </CardContent>
       </Card>
+
+      <div className="text-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            toast("Что умеет сайт", {
+              description: [
+                "🔍 Поиск по номеру заявки — введите номер заявки",
+                "🔍 Поиск по серийному номеру — введите серийный номер",
+                "🔍 Поиск по исполнителю — введите имя исполнителя",
+                "📊 Статистика — введите код 2218",
+                "📈 График заявок по дням — на странице статистики",
+                "📋 Список ожидания запчастей — на странице статистики",
+                "🔄 Повторные заявки — считаются по серийным номерам",
+                "👤 Фильтр по исполнителю — выберите в списке",
+                "📅 Фильтр по периоду — выберите в списке",
+                "🌙 Тёмная тема — кнопка в шапке",
+                "❌ Очистка поиска — крестик в поле или клавиша Esc",
+                "📁 Загрузка отчёта — кнопка на странице статистики",
+                "🗑️ Удалить данные — кнопка на странице статистики",
+              ].join("\n"),
+              duration: 10000,
+            });
+          }}
+          className="gap-2 text-muted-foreground"
+        >
+          <HelpCircle className="h-4 w-4" />
+          Что умеет сайт
+        </Button>
+      </div>
     </div>
   );
 }
