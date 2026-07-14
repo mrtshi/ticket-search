@@ -161,8 +161,7 @@ export function TicketSearch() {
       const matched = tickets.filter(
         (t: Ticket) =>
           t.ticketNumber.toLowerCase() === q ||
-          t.serialNumber.toLowerCase() === q ||
-          t.performer.toLowerCase().includes(q)
+          t.serialNumber.toLowerCase() === q
       );
 
       if (matched.length > 0) {
