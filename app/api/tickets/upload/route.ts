@@ -13,11 +13,7 @@ const COLUMN_NAMES = [
 ];
 
 function normalize(str: string): string {
-  return str
-    .replace(/\s+/g, " ")
-    .replace(/[№#]/g, "№")
-    .trim()
-    .toLowerCase();
+  return str.replace(/\s+/g, " ").trim().toLowerCase();
 }
 
 export async function POST(request: NextRequest) {
