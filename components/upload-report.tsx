@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { saveTickets } from "@/lib/local-storage";
 
 export function UploadReport({
   label = "Загрузить отчёт",
@@ -42,7 +43,15 @@ export function UploadReport({
         throw new Error(data.error || "Ошибка загрузки");
       }
 
-      toast.success("Отчёт загружен", { id: toastId });
+      const data = await res.json();
+
+      // Сохраняем в localStorage как резервную копию
+      const isArchive = uploadUrl.includes("type=archive");
+      if (data.tickets) {
+        saveTickets(data.tickets, isArchive);
+      }
+
+      toast.success(`Отчёт загружен: ${data.count} заявок`, { id: toastId });
       onUploadComplete?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Ошибка загрузки", {
