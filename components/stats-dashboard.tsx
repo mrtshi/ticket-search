@@ -233,14 +233,42 @@ export function StatsDashboard({ onBackToSearch: _onBackToSearch }: { onBackToSe
               localStorage.removeItem("polair_archive_tickets");
               localStorage.removeItem("polair_uploaded_at");
               localStorage.removeItem("polair_archive_uploaded_at");
-              toast.success("Данные удалены");
+              toast.success("Все данные удалены");
               setRefreshKey((k) => k + 1);
             } catch {
               toast.error("Ошибка при удалении");
             }
           }} className="gap-2 text-red-600 border-red-200 hover:bg-red-50">
             <Trash2 className="h-4 w-4" />
-            Удалить данные
+            Удалить все данные
+          </Button>
+          <Button variant="outline" size="sm" onClick={async () => {
+            try {
+              await fetch("/api/tickets?type=current", { method: "DELETE" });
+              localStorage.removeItem("polair_tickets");
+              localStorage.removeItem("polair_uploaded_at");
+              toast.success("Текущий отчёт удалён");
+              setRefreshKey((k) => k + 1);
+            } catch {
+              toast.error("Ошибка при удалении");
+            }
+          }} className="gap-2 text-orange-600 border-orange-200 hover:bg-orange-50">
+            <Trash2 className="h-4 w-4" />
+            Удалить текущий отчёт
+          </Button>
+          <Button variant="outline" size="sm" onClick={async () => {
+            try {
+              await fetch("/api/tickets?type=archive", { method: "DELETE" });
+              localStorage.removeItem("polair_archive_tickets");
+              localStorage.removeItem("polair_archive_uploaded_at");
+              toast.success("Архив удалён");
+              setRefreshKey((k) => k + 1);
+            } catch {
+              toast.error("Ошибка при удалении");
+            }
+          }} className="gap-2 text-orange-600 border-orange-200 hover:bg-orange-50">
+            <Trash2 className="h-4 w-4" />
+            Удалить архив
           </Button>
           <Button variant="outline" size="sm" onClick={() => { setSelectedPerformer(null); setSelectedPeriod("7d"); }} className="gap-2">
             <RotateCcw className="h-4 w-4" />
