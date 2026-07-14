@@ -48,3 +48,10 @@ export function getUploadedAt(): string | null {
 export function getArchiveUploadedAt(): string | null {
   return archiveUploadedAt;
 }
+
+export function clearAllTickets() {
+  uploadedTickets = [];
+  archiveTickets = [];
+  uploadedAt = null;
+  archiveUploadedAt = null;
+}
