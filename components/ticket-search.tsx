@@ -6,6 +6,7 @@ import {
   FileText,
   Hash,
   Calendar,
+  CalendarCheck,
   MapPin,
   User,
   XCircle,
@@ -89,6 +90,17 @@ function ResultCard({ ticket }: { ticket: Ticket }) {
             <p className="text-sm font-medium">{ticket.date}</p>
           </div>
         </div>
+        {ticket.completionDate && (
+          <div className="flex items-start gap-3 rounded-lg bg-muted/30 p-3">
+            <div className="mt-0.5 shrink-0">
+              <CalendarCheck className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted-foreground">Дата выполнения ремонта</p>
+              <p className="text-sm font-medium">{ticket.completionDate}</p>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
