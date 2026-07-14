@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   FileText,
@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatsDashboard } from "@/components/stats-dashboard";
 import { Ticket } from "@/lib/mock-data";
+import { getStoredTickets, getStoredArchiveTickets, getStoredUploadedAt, getStoredArchiveUploadedAt } from "@/lib/local-storage";
 
 const statusColors: Record<string, string> = {
   Утвержден: "bg-green-100 text-green-700 border-green-300",
@@ -100,6 +101,33 @@ export function TicketSearch() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [restored, setRestored] = useState(false);
+
+  // Восстанавливаем данные из localStorage, если сервер пуст
+  useEffect(() => {
+    if (restored) return;
+    
+    const storedTickets = getStoredTickets();
+    const storedArchive = getStoredArchiveTickets();
+    const storedUploadedAt = getStoredUploadedAt();
+    const storedArchiveUploadedAt = getStoredArchiveUploadedAt();
+    
+    if (storedTickets.length > 0 || storedArchive.length > 0) {
+      // Отправляем данные на сервер
+      fetch("/api/tickets/restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tickets: storedTickets,
+          uploadedAt: storedUploadedAt,
+          archiveTickets: storedArchive,
+          archiveUploadedAt: storedArchiveUploadedAt,
+        }),
+      }).catch(() => {});
+    }
+    
+    setRestored(true);
+  }, [restored]);
 
   const fetchTickets = async (): Promise<Ticket[]> => {
     const res = await fetch("/api/tickets");
