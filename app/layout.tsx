@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import "./globals.css";
-import { Search } from "lucide-react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Toaster } from "@/components/ui/sonner";
@@ -23,17 +23,20 @@ export default function RootLayout({
       <body className="antialiased min-h-screen bg-background flex flex-col">
         <ThemeProvider>
           <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
-            <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-              <Link
-                href="/"
-                className="flex items-center gap-2 text-lg font-semibold tracking-tight"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <Search className="h-4 w-4" />
-                </div>
-                {appName}
+            <div className="container mx-auto px-4 h-14 flex items-center justify-center">
+              <Link href="/" className="flex items-center gap-2">
+                <Image
+                  src="https://www.polair.com/local/templates/cult/img/logo.svg"
+                  alt="Polair"
+                  width={100}
+                  height={32}
+                  className="h-8 w-auto"
+                  priority
+                />
               </Link>
-              <ThemeToggle />
+              <div className="absolute right-4">
+                <ThemeToggle />
+              </div>
             </div>
           </header>
           <main className="flex-1">{children}</main>
