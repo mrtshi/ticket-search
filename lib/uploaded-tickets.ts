@@ -15,6 +15,16 @@ export function setArchiveTickets(tickets: Ticket[]) {
   archiveUploadedAt = new Date().toISOString();
 }
 
+export function restoreUploadedTickets(tickets: Ticket[], date: string) {
+  uploadedTickets = tickets;
+  uploadedAt = date;
+}
+
+export function restoreArchiveTickets(tickets: Ticket[], date: string) {
+  archiveTickets = tickets;
+  archiveUploadedAt = date;
+}
+
 export function getAllTickets(): Ticket[] {
   const seen = new Set<string>();
   const result: Ticket[] = [];
