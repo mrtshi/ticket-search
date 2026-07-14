@@ -16,6 +16,22 @@ function normalize(str: string): string {
   return str.replace(/\s+/g, " ").trim().toLowerCase();
 }
 
+function findHeaderRow(data: string[][]): number {
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i].map((h: string) => normalize(String(h)));
+    const foundAll = COLUMN_NAMES.every((name) =>
+      row.some((cell: string) => cell.includes(normalize(name)))
+    );
+    if (foundAll) return i;
+  }
+  return -1;
+}
+
+function findColumnIndex(headers: string[], expected: string): number {
+  const normalized = normalize(expected);
+  return headers.findIndex((h: string) => normalize(h).includes(normalized));
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -33,15 +49,22 @@ export async function POST(request: NextRequest) {
     const data = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1 });
 
     if (data.length < 2) {
-      return NextResponse.json({ error: "Файл пуст или содержит только заголовки" }, { status: 400 });
+      return NextResponse.json({ error: "Файл пуст" }, { status: 400 });
     }
 
-    const headers = data[0].map((h: string) => String(h).trim());
+    const headerRowIndex = findHeaderRow(data);
+    if (headerRowIndex === -1) {
+      return NextResponse.json(
+        { error: `Не найдена строка с заголовками. Ожидаются: ${COLUMN_NAMES.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    const headers = data[headerRowIndex].map((h: string) => String(h).trim());
     const colIndexes: number[] = [];
 
     for (const expected of COLUMN_NAMES) {
-      const normalized = normalize(expected);
-      const idx = headers.findIndex((h: string) => normalize(h) === normalized);
+      const idx = findColumnIndex(headers, expected);
       if (idx === -1) {
         return NextResponse.json(
           { error: `Не найден столбец "${expected}" в файле. Ожидаются: ${COLUMN_NAMES.join(", ")}` },
@@ -54,12 +77,15 @@ export async function POST(request: NextRequest) {
     const seen = new Set<string>();
     const tickets: Ticket[] = [];
 
-    for (let i = 1; i < data.length; i++) {
+    for (let i = headerRowIndex + 1; i < data.length; i++) {
       const row = data[i];
-      if (!row || row.length < 7) continue;
+      if (!row || row.length < 2) continue;
+
+      const ticketNumber = String(row[colIndexes[0]] || "").trim();
+      if (!ticketNumber || ticketNumber === "Итого") continue;
 
       const ticket: Ticket = {
-        ticketNumber: String(row[colIndexes[0]] || "").trim(),
+        ticketNumber,
         itemName: String(row[colIndexes[1]] || "").trim(),
         serialNumber: String(row[colIndexes[2]] || "").trim(),
         date: String(row[colIndexes[3]] || "").trim(),
@@ -67,8 +93,6 @@ export async function POST(request: NextRequest) {
         performer: String(row[colIndexes[5]] || "").trim(),
         status: String(row[colIndexes[6]] || "").trim(),
       };
-
-      if (!ticket.ticketNumber) continue;
 
       const key = `${ticket.ticketNumber}-${ticket.serialNumber}`;
       if (!seen.has(key)) {
