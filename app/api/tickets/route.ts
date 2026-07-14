@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { getAllTickets, getUploadedAt, getArchiveUploadedAt } from "@/lib/uploaded-tickets";
+import { NextRequest, NextResponse } from "next/server";
+import { getAllTickets, getUploadedAt, getArchiveUploadedAt, clearCurrentTickets, clearArchiveTickets } from "@/lib/uploaded-tickets";
 import { mockTickets } from "@/lib/mock-data";
 
 export async function GET() {
@@ -18,4 +18,17 @@ export async function GET() {
     tickets: mockTickets,
     source: "mock",
   });
+}
+
+export async function DELETE(request: NextRequest) {
+  const url = new URL(request.url);
+  const type = url.searchParams.get("type");
+
+  if (type === "archive") {
+    clearArchiveTickets();
+  } else {
+    clearCurrentTickets();
+  }
+
+  return NextResponse.json({ success: true });
 }
