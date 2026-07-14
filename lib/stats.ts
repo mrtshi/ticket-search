@@ -1,10 +1,20 @@
 import { Ticket } from "./mock-data";
 
-export type Period = "7d" | "30d" | "2026" | "2025" | "2024" | "2023" | "2022" | "2021" | "2020" | "all";
+export type Period =
+  | "7d"
+  | "30d"
+  | "2026"
+  | "2025"
+  | "2024"
+  | "2023"
+  | "2022"
+  | "2021"
+  | "2020"
+  | "all";
 
 export const PERIOD_LABELS: Record<Period, string> = {
-  "7d": "7 дней",
-  "30d": "30 дней",
+  "7d": "Последние 7 дней",
+  "30d": "Последние 30 дней",
   "2026": "2026 год",
   "2025": "2025 год",
   "2024": "2024 год",
@@ -25,34 +35,87 @@ export interface DailyCount {
   count: number;
 }
 
+export interface FailureCount {
+  itemName: string;
+  count: number;
+}
+
 function parseDate(dateStr: string): Date {
-  const parts = dateStr.split(".");
-  if (parts.length === 3) {
-    const [day, month, year] = parts;
-    return new Date(`${year}-${month}-${day}T00:00:00Z`);
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split(".").map(Number);
+    return new Date(Date.UTC(year, month - 1, day));
   }
   return new Date(dateStr + "T00:00:00Z");
 }
 
-function filterByPeriod(tickets: Ticket[], period: Period): Ticket[] {
-  if (period === "all") return tickets;
+function isInPeriod(ticket: Ticket, period: Period): boolean {
+  const ticketDate = parseDate(ticket.date);
+  const now = new Date();
+
   if (period === "7d") {
-    const cutoff = new Date();
-    cutoff.setUTCDate(cutoff.getUTCDate() - 7);
-    return tickets.filter((t) => parseDate(t.date) >= cutoff);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    return ticketDate >= sevenDaysAgo;
   }
+
   if (period === "30d") {
-    const cutoff = new Date();
-    cutoff.setUTCDate(cutoff.getUTCDate() - 30);
-    return tickets.filter((t) => parseDate(t.date) >= cutoff);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    return ticketDate >= thirtyDaysAgo;
   }
-  const year = parseInt(period);
-  return tickets.filter((t) => parseDate(t.date).getUTCFullYear() === year);
+
+  if (period === "all") return true;
+
+  const year = parseInt(period, 10);
+  return ticketDate.getUTCFullYear() === year;
 }
 
-export function computeStatsByPeriod(tickets: Ticket[], period: Period): StatsByStatus[] {
-  const filtered = filterByPeriod(tickets, period);
-  return aggregateByStatus(filtered);
+export function computeStatsByPeriod(
+  tickets: Ticket[],
+  period: Period
+): StatsByStatus[] {
+  const filtered = tickets.filter((t) => isInPeriod(t, period));
+  const statusMap = new Map<string, number>();
+
+  for (const t of filtered) {
+    statusMap.set(t.status, (statusMap.get(t.status) || 0) + 1);
+  }
+
+  return Array.from(statusMap.entries())
+    .map(([status, count]) => ({ status, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+export function computeDailyTickets(
+  tickets: Ticket[],
+  period: Period
+): DailyCount[] {
+  const filtered = tickets.filter((t) => isInPeriod(t, period));
+  const dayMap = new Map<string, number>();
+
+  for (const t of filtered) {
+    const day = parseDate(t.date).toISOString().split("T")[0];
+    dayMap.set(day, (dayMap.get(day) || 0) + 1);
+  }
+
+  return Array.from(dayMap.entries())
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function getTopFailures(
+  tickets: Ticket[],
+  limit: number = 10
+): FailureCount[] {
+  const itemMap = new Map<string, number>();
+
+  for (const t of tickets) {
+    const name = t.itemName || "Не указано";
+    itemMap.set(name, (itemMap.get(name) || 0) + 1);
+  }
+
+  return Array.from(itemMap.entries())
+    .map(([itemName, count]) => ({ itemName, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit);
 }
 
 export function getWaitingPartsTickets(tickets: Ticket[]): Ticket[] {
@@ -60,40 +123,15 @@ export function getWaitingPartsTickets(tickets: Ticket[]): Ticket[] {
 }
 
 export function countRepeatSerialNumbers(tickets: Ticket[]): number {
-  const serialCounts = new Map<string, number>();
+  const serialMap = new Map<string, number>();
   for (const t of tickets) {
-    serialCounts.set(t.serialNumber, (serialCounts.get(t.serialNumber) || 0) + 1);
+    if (t.serialNumber) {
+      serialMap.set(t.serialNumber, (serialMap.get(t.serialNumber) || 0) + 1);
+    }
   }
-  let repeats = 0;
-  for (const count of serialCounts.values()) {
-    if (count > 1) repeats++;
+  let repeatCount = 0;
+  for (const count of serialMap.values()) {
+    if (count > 1) repeatCount++;
   }
-  return repeats;
-}
-
-export function computeDailyChart(tickets: Ticket[], period: Period): DailyCount[] {
-  const filtered = filterByPeriod(tickets, period);
-  const map = new Map<string, number>();
-  
-  for (const t of filtered) {
-    map.set(t.date, (map.get(t.date) || 0) + 1);
-  }
-  
-  return Array.from(map.entries())
-    .map(([date, count]) => ({ date, count }))
-    .sort((a, b) => {
-      const [d1, m1, y1] = a.date.split(".");
-      const [d2, m2, y2] = b.date.split(".");
-      return new Date(`${y1}-${m1}-${d1}`).getTime() - new Date(`${y2}-${m2}-${d2}`).getTime();
-    });
-}
-
-function aggregateByStatus(tickets: Ticket[]): StatsByStatus[] {
-  const map = new Map<string, number>();
-  for (const t of tickets) {
-    map.set(t.status, (map.get(t.status) || 0) + 1);
-  }
-  return Array.from(map.entries())
-    .map(([status, count]) => ({ status, count }))
-    .sort((a, b) => b.count - a.count);
+  return repeatCount;
 }
