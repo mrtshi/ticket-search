@@ -7,6 +7,7 @@ import {
   Clock,
   Loader2,
   RotateCcw,
+  Trash2,
   Wrench,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ import {
   StatsByStatus,
   countRepeatSerialNumbers,
 } from "@/lib/stats";
+import { toast } from "sonner";
 
 const HOURS_24_MS = 24 * 60 * 60 * 1000;
 
@@ -178,6 +180,22 @@ export function StatsDashboard({ onBackToSearch: _onBackToSearch }: { onBackToSe
         <div className="flex items-center justify-center gap-3">
           <UploadReport onUploadComplete={() => setRefreshKey((k) => k + 1)} />
           <UploadReport label="Загрузить отчёт за предыдущий период" uploadUrl="/api/tickets/upload?type=archive" onUploadComplete={() => setRefreshKey((k) => k + 1)} />
+          <Button variant="outline" size="sm" onClick={async () => {
+            try {
+              await fetch("/api/tickets/clear", { method: "POST" });
+              localStorage.removeItem("polair_tickets");
+              localStorage.removeItem("polair_archive_tickets");
+              localStorage.removeItem("polair_uploaded_at");
+              localStorage.removeItem("polair_archive_uploaded_at");
+              toast.success("Данные удалены");
+              setRefreshKey((k) => k + 1);
+            } catch {
+              toast.error("Ошибка при удалении");
+            }
+          }} className="gap-2 text-red-600 border-red-200 hover:bg-red-50">
+            <Trash2 className="h-4 w-4" />
+            Удалить данные
+          </Button>
           <Button variant="outline" size="sm" onClick={() => { setSelectedPerformer(null); setSelectedPeriod("7d"); }} className="gap-2">
             <RotateCcw className="h-4 w-4" />
             Сброс
