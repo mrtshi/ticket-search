@@ -20,6 +20,11 @@ export interface StatsByStatus {
   count: number;
 }
 
+export interface DailyCount {
+  date: string;
+  count: number;
+}
+
 function parseDate(dateStr: string): Date {
   const parts = dateStr.split(".");
   if (parts.length === 3) {
@@ -64,6 +69,23 @@ export function countRepeatSerialNumbers(tickets: Ticket[]): number {
     if (count > 1) repeats++;
   }
   return repeats;
+}
+
+export function computeDailyChart(tickets: Ticket[], period: Period): DailyCount[] {
+  const filtered = filterByPeriod(tickets, period);
+  const map = new Map<string, number>();
+  
+  for (const t of filtered) {
+    map.set(t.date, (map.get(t.date) || 0) + 1);
+  }
+  
+  return Array.from(map.entries())
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => {
+      const [d1, m1, y1] = a.date.split(".");
+      const [d2, m2, y2] = b.date.split(".");
+      return new Date(`${y1}-${m1}-${d1}`).getTime() - new Date(`${y2}-${m2}-${d2}`).getTime();
+    });
 }
 
 function aggregateByStatus(tickets: Ticket[]): StatsByStatus[] {
