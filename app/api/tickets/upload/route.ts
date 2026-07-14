@@ -12,6 +12,14 @@ const COLUMN_NAMES = [
   "Статус заявки в Фениксе",
 ];
 
+function normalize(str: string): string {
+  return str
+    .replace(/\s+/g, " ")
+    .replace(/[№#]/g, "№")
+    .trim()
+    .toLowerCase();
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -36,10 +44,8 @@ export async function POST(request: NextRequest) {
     const colIndexes: number[] = [];
 
     for (const expected of COLUMN_NAMES) {
-      const normalized = expected.replace(/\s+/g, " ").trim().toLowerCase();
-      const idx = headers.findIndex(
-        (h: string) => h.replace(/\s+/g, " ").trim().toLowerCase() === normalized
-      );
+      const normalized = normalize(expected);
+      const idx = headers.findIndex((h: string) => normalize(h) === normalized);
       if (idx === -1) {
         return NextResponse.json(
           { error: `Не найден столбец "${expected}" в файле. Ожидаются: ${COLUMN_NAMES.join(", ")}` },
