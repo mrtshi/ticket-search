@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   AlertTriangle,
+  BarChart3,
   CalendarDays,
   Clock,
   Loader2,
@@ -25,6 +26,7 @@ import { UploadReport } from "@/components/upload-report";
 import {
   computeStatsByPeriod,
   getWaitingPartsTickets,
+  computeDailyChart,
   PERIOD_LABELS,
   Period,
   StatsByStatus,
@@ -58,6 +60,32 @@ function StatsTable({ data }: { data: StatsByStatus[] }) {
           <span className="text-sm font-bold tabular-nums">{item.count}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+function DailyChart({ data }: { data: { date: string; count: number }[] }) {
+  if (data.length === 0) {
+    return <p className="text-sm text-muted-foreground py-2">Нет данных</p>;
+  }
+  const maxCount = Math.max(...data.map((d) => d.count), 1);
+  return (
+    <div className="space-y-1">
+      {data.map((item) => {
+        const pct = (item.count / maxCount) * 100;
+        return (
+          <div key={item.date} className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground w-20 shrink-0 text-right">{item.date}</span>
+            <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <span className="text-xs font-bold w-6 text-left">{item.count}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -151,6 +179,7 @@ export function StatsDashboard({ onBackToSearch: _onBackToSearch }: { onBackToSe
   const stats = computeStatsByPeriod(filteredTickets, selectedPeriod);
   const waitingParts = getWaitingPartsTickets(filteredTickets);
   const repeats = countRepeatSerialNumbers(filteredTickets);
+  const dailyData = computeDailyChart(filteredTickets, selectedPeriod);
 
   const hasArchive = archiveUploadedAt !== null;
 
@@ -232,6 +261,18 @@ export function StatsDashboard({ onBackToSearch: _onBackToSearch }: { onBackToSe
           </div>
         </div>
       </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            Заявки по дням
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DailyChart data={dailyData} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="pb-3">
