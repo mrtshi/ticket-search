@@ -14,6 +14,8 @@ const COLUMN_NAMES = [
   "Статус заявки в Фениксе",
 ];
 
+const COMPLETION_COLUMN_NAMES = ["Дата выполнения ремонта"];
+
 function normalize(str: string): string {
   return str.replace(/\s+/g, " ").trim().toLowerCase();
 }
@@ -76,6 +78,15 @@ export async function POST(request: NextRequest) {
       colIndexes.push(idx);
     }
 
+    let completionColIndex = -1;
+    for (const name of COMPLETION_COLUMN_NAMES) {
+      const idx = findColumnIndex(headers, name);
+      if (idx !== -1) {
+        completionColIndex = idx;
+        break;
+      }
+    }
+
     const seen = new Set<string>();
     const tickets: Ticket[] = [];
 
@@ -95,6 +106,11 @@ export async function POST(request: NextRequest) {
         performer: String(row[colIndexes[5]] || "").trim(),
         status: String(row[colIndexes[6]] || "").trim(),
       };
+
+      if (completionColIndex !== -1) {
+        const val = String(row[completionColIndex] || "").trim();
+        if (val) ticket.completionDate = val;
+      }
 
       const key = `${ticket.ticketNumber}-${ticket.serialNumber}`;
       if (!seen.has(key)) {
