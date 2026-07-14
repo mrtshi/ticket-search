@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { setUploadedTickets, setArchiveTickets } from "@/lib/uploaded-tickets";
 import type { Ticket } from "@/lib/mock-data";
 
+export const maxDuration = 60;
+
 const COLUMN_NAMES = [
   "№ заявки",
   "Номенклатура",
