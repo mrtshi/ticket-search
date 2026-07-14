@@ -107,32 +107,6 @@ function DailyChart({ data }: { data: { date: string; count: number }[] }) {
   );
 }
 
-        {collapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
-        {collapsed ? "Показать график" : "Скрыть график"}
-      </button>
-      {!collapsed && (
-        <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
-          {data.map((item) => {
-            const pct = (item.count / maxCount) * 100;
-            return (
-              <div key={item.date} className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground w-20 shrink-0 text-right">{item.date}</span>
-                <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full transition-all"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <span className="text-xs font-bold w-6 text-left">{item.count}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
 function WaitingPartsList({ tickets }: { tickets: Ticket[] }) {
   if (tickets.length === 0) {
     return <p className="text-sm text-muted-foreground py-2">Нет заявок</p>;
