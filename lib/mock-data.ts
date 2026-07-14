@@ -6,6 +6,7 @@ export interface Ticket {
   address: string;
   performer: string;
   status: string;
+  completionDate?: string;
 }
 
 export const mockTickets: Ticket[] = [
