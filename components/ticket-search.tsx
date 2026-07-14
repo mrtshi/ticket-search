@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Search,
   FileText,
@@ -103,7 +103,6 @@ export function TicketSearch() {
   const [showStats, setShowStats] = useState(false);
   const [restored, setRestored] = useState(false);
 
-  // Восстанавливаем данные из localStorage, если сервер пуст
   useEffect(() => {
     if (restored) return;
     
@@ -113,7 +112,6 @@ export function TicketSearch() {
     const storedArchiveUploadedAt = getStoredArchiveUploadedAt();
     
     if (storedTickets.length > 0 || storedArchive.length > 0) {
-      // Отправляем данные на сервер
       fetch("/api/tickets/restore", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -129,7 +127,7 @@ export function TicketSearch() {
     setRestored(true);
   }, [restored]);
 
-  const fetchTickets = async (): Promise<Ticket[]> => {
+  const fetchTickets = useCallback(async (): Promise<Ticket[]> => {
     const res = await fetch("/api/tickets");
     if (!res.ok) {
       const body = await res.json();
@@ -137,7 +135,7 @@ export function TicketSearch() {
     }
     const data = await res.json();
     return data.tickets;
-  };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,7 +161,8 @@ export function TicketSearch() {
       const matched = tickets.filter(
         (t: Ticket) =>
           t.ticketNumber.toLowerCase() === q ||
-          t.serialNumber.toLowerCase() === q
+          t.serialNumber.toLowerCase() === q ||
+          t.performer.toLowerCase().includes(q)
       );
 
       if (matched.length > 0) {
@@ -185,6 +184,12 @@ export function TicketSearch() {
     setError(null);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      handleClear();
+    }
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto text-center space-y-6">
       <p className="text-sm text-muted-foreground tracking-wide uppercase">
@@ -198,6 +203,7 @@ export function TicketSearch() {
             placeholder="Номер заявки или серийный номер"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
             className="h-14 text-base pl-5 pr-12 shadow-sm"
           />
           {query && (
