@@ -116,6 +116,8 @@ export async function POST(request: NextRequest) {
       success: true,
       count: tickets.length,
       type: type === "archive" ? "archive" : "current",
+      tickets,
+      uploadedAt: new Date().toISOString(),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Неизвестная ошибка";
