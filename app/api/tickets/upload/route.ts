@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { setUploadedTickets, setArchiveTickets } from "@/lib/uploaded-tickets";
 import type { Ticket } from "@/lib/mock-data";
 
-const COLUMN_MAP: Record<string, number> = {
-  "№ заявки": 0,
-  Номенклатура: 1,
-  "Заводской №": 2,
-  "Дата принятия заявки на ремонт": 3,
-  "Местонахождение оборудования": 4,
-  Исполнитель: 5,
-  "Статус заявки в Фениксе": 6,
-};
+const COLUMN_NAMES = [
+  "№ заявки",
+  "Номенклатура",
+  "Заводской №",
+  "Дата принятия заявки на ремонт",
+  "Местонахождение оборудования",
+  "Исполнитель",
+  "Статус заявки в Фениксе",
+];
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,10 +36,15 @@ export async function POST(request: NextRequest) {
     const colIndexes: number[] = [];
 
     for (const [header] of Object.entries(COLUMN_MAP)) {
-      const idx = headers.indexOf(header);
+    const colIndexes: number[] = [];
+
+    for (const expected of COLUMN_NAMES) {
+      const idx = headers.findIndex(
+        (h: string) => h.replace(/\s+/g, " ").trim().toLowerCase() === expected.replace(/\s+/g, " ").trim().toLowerCase()
+      );
       if (idx === -1) {
         return NextResponse.json(
-          { error: `Не найден столбец "${header}" в файле. Ожидаются: ${Object.keys(COLUMN_MAP).join(", ")}` },
+          { error: `Не найден столбец "${expected}" в файле. Ожидаются: ${COLUMN_NAMES.join(", ")}` },
           { status: 400 }
         );
       }
