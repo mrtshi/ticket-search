@@ -77,8 +77,36 @@ function DailyChart({ data }: { data: { date: string; count: number }[] }) {
     <div>
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center gap-1 text-xs text-muted-foreground mb-2 hover:text-foreground transition-colors"
+        className="flex items-center gap-1 text-xs text-muted-foreground mb-3 hover:text-foreground transition-colors"
       >
+        {collapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+        {collapsed ? "Показать график" : "Скрыть график"}
+      </button>
+      {!collapsed && (
+        <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+          {data.map((item) => {
+            const pct = (item.count / maxCount) * 100;
+            return (
+              <div key={item.date} className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground w-20 shrink-0 text-right">{item.date}</span>
+                <div className="flex-1 h-6 bg-muted rounded-sm overflow-hidden relative">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-sm transition-all duration-300"
+                    style={{ width: `${pct}%` }}
+                  />
+                  <span className="absolute inset-0 flex items-center pl-1 text-xs font-bold text-white drop-shadow-sm">
+                    {item.count}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
         {collapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
         {collapsed ? "Показать график" : "Скрыть график"}
       </button>
