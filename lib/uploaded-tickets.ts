@@ -55,3 +55,13 @@ export function clearAllTickets() {
   uploadedAt = null;
   archiveUploadedAt = null;
 }
+
+export function clearCurrentTickets() {
+  uploadedTickets = [];
+  uploadedAt = null;
+}
+
+export function clearArchiveTickets() {
+  archiveTickets = [];
+  archiveUploadedAt = null;
+}
