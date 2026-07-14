@@ -32,15 +32,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Файл пуст или содержит только заголовки" }, { status: 400 });
     }
 
-    const headers = data[0].map((h: string) => h.trim());
-    const colIndexes: number[] = [];
-
-    for (const [header] of Object.entries(COLUMN_MAP)) {
+    const headers = data[0].map((h: string) => String(h).trim());
     const colIndexes: number[] = [];
 
     for (const expected of COLUMN_NAMES) {
+      const normalized = expected.replace(/\s+/g, " ").trim().toLowerCase();
       const idx = headers.findIndex(
-        (h: string) => h.replace(/\s+/g, " ").trim().toLowerCase() === expected.replace(/\s+/g, " ").trim().toLowerCase()
+        (h: string) => h.replace(/\s+/g, " ").trim().toLowerCase() === normalized
       );
       if (idx === -1) {
         return NextResponse.json(
