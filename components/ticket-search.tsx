@@ -1,233 +1,279 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Search, X, Loader2, Info } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Search,
+  FileText,
+  Hash,
+  Calendar,
+  MapPin,
+  User,
+  XCircle,
+  AlertCircle,
+  Loader2,
+  X,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatsDashboard } from "@/components/stats-dashboard";
 import { Ticket } from "@/lib/mock-data";
-import { getStoredTickets } from "@/lib/local-storage";
+import { fetchServerTickets } from "@/lib/local-storage";
 
 const statusColors: Record<string, string> = {
   Утвержден: "bg-green-100 text-green-700 border-green-300",
   "В работе": "bg-cyan-100 text-cyan-700 border-cyan-300",
   Регистрация: "bg-yellow-100 text-yellow-700 border-yellow-300",
-  "Ожидание запчастей":
-    "bg-orange-100 text-orange-700 border-orange-300",
 };
 
-function StatusBadge({ status }: { status: string }) {
-  const color =
-    statusColors[status] ||
-    "bg-slate-100 text-slate-700 border-slate-300";
-  return (
-    <Badge variant="outline" className={color}>
-      {status}
-    </Badge>
-  );
-}
-
 function ResultCard({ ticket }: { ticket: Ticket }) {
+  const statusClass =
+    statusColors[ticket.status] ||
+    "bg-slate-50 text-slate-700 border-slate-200";
+
   return (
     <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold">Заявка {ticket.ticketNumber}</h2>
-          <StatusBadge status={ticket.status} />
-        </div>
-        <div className="space-y-3">
-          <div className="p-3 rounded-lg bg-muted/30">
-            <p className="text-xs text-muted-foreground mb-0.5">Номенклатура</p>
-            <p className="text-sm font-medium">{ticket.itemName}</p>
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <FileText className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">
+                Заявка {ticket.ticketNumber}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {ticket.itemName}
+              </p>
+            </div>
           </div>
-          <div className="p-3 rounded-lg bg-muted/30">
-            <p className="text-xs text-muted-foreground mb-0.5">Серийный номер</p>
+          <Badge className={`${statusClass} shrink-0`}>{ticket.status}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-start gap-3 rounded-lg bg-muted/30 p-3">
+          <div className="mt-0.5 shrink-0">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted-foreground">Адрес</p>
+            <p className="text-sm font-medium">{ticket.address}</p>
+          </div>
+        </div>
+        <div className="flex items-start gap-3 rounded-lg bg-muted/30 p-3">
+          <div className="mt-0.5 shrink-0">
+            <Hash className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted-foreground">Серийный номер</p>
             <p className="text-sm font-medium">{ticket.serialNumber}</p>
           </div>
-          <div className="p-3 rounded-lg bg-muted/30">
-            <p className="text-xs text-muted-foreground mb-0.5">Дата заявки</p>
-            <p className="text-sm font-medium">{ticket.date}</p>
+        </div>
+        <div className="flex items-start gap-3 rounded-lg bg-muted/30 p-3">
+          <div className="mt-0.5 shrink-0">
+            <User className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="p-3 rounded-lg bg-muted/30">
-            <p className="text-xs text-muted-foreground mb-0.5">Адрес</p>
-            <p className="text-sm">{ticket.address}</p>
-          </div>
-          <div className="p-3 rounded-lg bg-muted/30">
-            <p className="text-xs text-muted-foreground mb-0.5">Исполнитель</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted-foreground">Исполнитель</p>
             <p className="text-sm font-medium">{ticket.performer}</p>
           </div>
-          {ticket.completionDate && (
-            <div className="p-3 rounded-lg bg-muted/30">
-              <p className="text-xs text-muted-foreground mb-0.5">
+        </div>
+        <div className="flex items-start gap-3 rounded-lg bg-muted/30 p-3">
+          <div className="mt-0.5 shrink-0">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted-foreground">Дата заявки</p>
+            <p className="text-sm font-medium">{ticket.date}</p>
+          </div>
+        </div>
+        {ticket.completionDate && (
+          <div className="flex items-start gap-3 rounded-lg bg-green-50/50 p-3 border border-green-100">
+            <div className="mt-0.5 shrink-0">
+              <Calendar className="h-4 w-4 text-green-600" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-green-600 font-medium">
                 Дата выполнения ремонта
               </p>
-              <p className="text-sm font-medium">{ticket.completionDate}</p>
+              <p className="text-sm font-medium text-green-700">
+                {ticket.completionDate}
+              </p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 }
 
-export default function TicketSearch() {
+export function TicketSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Ticket[]>([]);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showStats, setShowStats] = useState(false);
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [allTickets, setAllTickets] = useState<Ticket[]>([]);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
-    const stored = getStoredTickets();
-    if (stored.length > 0) {
-      setTickets(stored);
-    }
+    fetchServerTickets()
+      .then((data) => setAllTickets(data.tickets))
+      .catch(() => {})
+      .finally(() => setInitialLoading(false));
   }, []);
 
-  const handleSearch = useCallback(async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     const trimmed = query.trim();
     if (!trimmed) return;
 
+    setError(null);
+    setResults([]);
+    setNotFound(false);
+    setShowStats(false);
+    setLoading(true);
+
     if (trimmed === "2218") {
       setShowStats(true);
-      setResults([]);
-      setNotFound(false);
-      setError(null);
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setResults([]);
-    setNotFound(false);
-    setError(null);
-
     try {
-      const res = await fetch("/api/tickets");
-      if (!res.ok) throw new Error("Ошибка загрузки данных");
-      const data = await res.json();
-      const allTickets: Ticket[] = data.tickets || [];
+      const tickets = allTickets;
+      const q = trimmed.toLowerCase();
 
-      const found = allTickets.filter(
-        (t) =>
-          t.ticketNumber === trimmed ||
-          t.serialNumber === trimmed ||
-          t.performer.toLowerCase().includes(trimmed.toLowerCase())
+      const matched = tickets.filter(
+        (t: Ticket) =>
+          t.ticketNumber.toLowerCase() === q ||
+          t.serialNumber.toLowerCase() === q ||
+          t.performer.toLowerCase().includes(q)
       );
 
-      if (found.length > 0) {
-        setResults(found);
+      if (matched.length > 0) {
+        setResults(matched);
       } else {
         setNotFound(true);
       }
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Неизвестная ошибка";
-      setError(message);
+      setError(err instanceof Error ? err.message : "Неизвестная ошибка");
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  };
 
   const handleClear = () => {
     setQuery("");
     setResults([]);
     setNotFound(false);
     setError(null);
-    setShowStats(false);
   };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      handleClear();
-    }
-  };
-
-  if (showStats) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <StatsDashboard onBackToSearch={handleClear} />
-      </div>
-    );
-  }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
-      <div className="text-center space-y-4 mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Отслеживание заявок на ремонт оборудования
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Введите номер заявки или серийный номер оборудования для получения
-          информации
-        </p>
-      </div>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSearch();
-        }}
-        className="relative"
-      >
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Номер заявки или серийный номер"
-            className="flex h-14 w-full rounded-full border border-input bg-background pl-12 pr-12 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
+    <div className="w-full max-w-2xl mx-auto text-center space-y-6">
+      {initialLoading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-      </form>
+      ) : (
+        <>
+          <p className="text-sm text-muted-foreground tracking-wide uppercase">
+            Отслеживание заявок на ремонт оборудования
+          </p>
 
-      <div className="mt-6 space-y-4">
-        {loading && (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        )}
+          <form onSubmit={handleSubmit} className="flex gap-3">
+            <div className="relative flex-1">
+              <Input
+                type="text"
+                placeholder="Номер заявки или серийный номер"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    handleClear();
+                  }
+                }}
+                className="h-14 text-base pl-5 pr-12 shadow-sm"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label="Очистить поиск"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <Button
+              type="submit"
+              size="lg"
+              disabled={loading}
+              className="h-14 px-8 gap-2 text-base font-medium shrink-0"
+            >
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Search className="h-5 w-5" />
+              )}
+              {loading ? "Поиск..." : "Найти"}
+            </Button>
+          </form>
 
-        {error && (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <div className="flex items-center justify-center gap-2 text-destructive">
-                <Info className="h-5 w-5" />
-                <p>{error}</p>
+          <p className="text-sm text-muted-foreground -mt-4">
+            Введите номер заявки или серийный номер оборудования для получения
+            информации
+          </p>
+
+          {error && (
+            <div className="flex flex-col items-center gap-3 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+                <AlertCircle className="h-8 w-8 text-destructive" />
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <p className="text-destructive font-medium">{error}</p>
+            </div>
+          )}
 
-        {notFound && (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">Ничего не найдено</p>
-            </CardContent>
-          </Card>
-        )}
+          {notFound && (
+            <div className="flex flex-col items-center gap-3 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                <XCircle className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground font-medium">
+                Ничего не найдено
+              </p>
+            </div>
+          )}
 
-        {results.length > 0 && (
-          <div className="space-y-4">
-            {results.map((ticket) => (
-              <ResultCard key={`${ticket.ticketNumber}-${ticket.serialNumber}`} ticket={ticket} />
-            ))}
-          </div>
-        )}
-      </div>
+          {results.length > 0 && (
+            <div className="space-y-4">
+              {results.map((ticket) => (
+                <ResultCard
+                  key={`${ticket.ticketNumber}-${ticket.serialNumber}`}
+                  ticket={ticket}
+                />
+              ))}
+            </div>
+          )}
+
+          {showStats && (
+            <StatsDashboard
+              onBackToSearch={() => {
+                setShowStats(false);
+                setQuery("");
+                setResults([]);
+                setNotFound(false);
+                setError(null);
+              }}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 }
